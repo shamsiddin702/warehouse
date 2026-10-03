@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports &amp; Analytics &mdash; Stock Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232563eb'/><text y='.86em' x='50' text-anchor='middle' font-size='58'>&#128230;</text></svg>">
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar">
+    <a class="brand" href="dashboard.html">
+      <span class="brand__mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 4h8a1.8 1.8 0 0 1 1.8 1.8V6H6.2v-.2A1.8 1.8 0 0 1 8 4z"/>
+          <rect x="3.5" y="6" width="17" height="14.5" rx="2.2"/>
+          <path d="M9.5 11h5M9.5 14.5h5"/>
+        </svg>
+      </span>
+      <span>
+        <span class="brand__name">Stock Manager</span>
+        <span class="brand__sub">Warehouse System</span>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <a href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Dashboard
+      </a>
+      <a href="locations.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l9-5 9 5v12"/><path d="M8 21v-7h8v7"/><path d="M3 21h18"/></svg>
+        Warehouses
+      </a>
+      <a href="products.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8l8 4.2v9.9l-8 4.3-8-4.3V7z"/><path d="M4 7.1l8 4.2 8-4.2M12 11.3V21"/></svg>
+        Products
+      </a>
+      <a href="stock.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5M3 17.5l9 5 9-5"/></svg>
+        Stock Management
+      </a>
+      <a href="transfers.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>
+        Transfers
+      </a>
+      <a href="reports.html" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        Reports
+      </a>
+
+      <a href="expiry.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+        Expiry &amp; Dead Stock
+      </a>
+      <a href="lowstock.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l9 16.5H3z"/><path d="M12 9.5v4.5M12 17v.2"/></svg>
+        Low Stock
+      </a>
+      <a href="inventory.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v3H9z"/><path d="M9 5.5H6.5A1.5 1.5 0 0 0 5 7v12a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V7a1.5 1.5 0 0 0-1.5-1.5H15"/><path d="M9.5 13.5l2 2 4-4.5"/></svg>
+        Inventarizatsiya
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      Charts animate on load and replay when you switch tabs.
+      <button type="button" class="linkbtn" data-action="reset-demo">Reset demo data</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="content" data-reports>
+
+      <div class="page-head">
+        <div>
+          <h1>Reports &amp; Analytics</h1>
+          <p>Comprehensive stock and warehouse insights</p>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" style="margin-bottom:1.5rem">
+        <button role="tab" data-tab="overview"    aria-selected="true">Overview</button>
+        <button role="tab" data-tab="analysis"    aria-selected="false">Stock Analysis</button>
+        <button role="tab" data-tab="performance" aria-selected="false">Warehouse Performance</button>
+        <button role="tab" data-tab="alerts"      aria-selected="false">Alerts &amp; Actions</button>
+      </div>
+
+      <!-- ---------- overview ---------- -->
+      <section class="tabpanel" id="overview" role="tabpanel">
+        <div class="grid grid--4" data-kpis></div>
+
+        <div class="grid grid--2">
+          <div class="card">
+            <div class="card__head">
+              <h2>Stock Distribution by Category</h2>
+              <span class="right">
+                <button class="icon-btn" type="button" data-action="export-report" data-what="stock" title="Download stock report (CSV)" aria-label="Download stock report as CSV">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M7.5 10.5l4.5 4.5 4.5-4.5"/><path d="M4 19.5h16"/></svg>
+                </button>
+              </span>
+            </div>
+            <div class="card__body" data-donut></div>
+          </div>
+
+          <div class="card">
+            <div class="card__head"><h2>Activity Trend (Last 7 Days)</h2></div>
+            <div class="card__body" data-trend></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- stock analysis ---------- -->
+      <section class="tabpanel" id="analysis" role="tabpanel" hidden>
+        <div class="grid grid--2">
+          <div class="card">
+            <div class="card__head"><h2>Units by Category</h2></div>
+            <div class="card__body" data-cat-bars></div>
+          </div>
+          <div class="card">
+            <div class="card__head"><h2>Stock Value by Category</h2></div>
+            <div class="card__body" data-value-bars></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><h2>Slowest Moving Lines</h2></div>
+          <div class="card--flush" data-slow></div>
+        </div>
+      </section>
+
+      <!-- ---------- warehouse performance ---------- -->
+      <section class="tabpanel" id="performance" role="tabpanel" hidden>
+        <div class="card">
+          <div class="card__head"><h2>Utilization by Warehouse</h2></div>
+          <div class="card__body" data-util-bars></div>
+        </div>
+        <div class="card">
+          <div class="card__head"><h2>Units per Warehouse</h2></div>
+          <div class="card--flush" data-loc-table></div>
+        </div>
+      </section>
+
+      <!-- ---------- alerts ---------- -->
+      <section class="tabpanel" id="alerts" role="tabpanel" hidden>
+        <div class="card">
+          <div class="card__head"><h2>Lines at or Below Minimum</h2></div>
+          <div class="card--flush" data-alert-table></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
