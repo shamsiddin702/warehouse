@@ -47,6 +47,7 @@ function p(name, brand, cat, desc, row, shelf, stock, cap, reorder, cost, price,
   _pid++;
   return {
     id: 'SKU-' + String(_pid).padStart(4, '0'),
+    barcode: '880' + String(_pid).padStart(10, '0'),
     name, brand, cat, desc, row, shelf,
     stock, cap, reorder, cost, price, sup, sd: sd || 0
   };
@@ -426,3 +427,7 @@ const TREND = {
 /* ---------- inventory (stock-take) sessions ----------
    Filled by the Inventarizatsiya page; persisted via the Store snapshot. */
 const INVENTORIES = [];
+
+/* ---------- receipts (chek) — written by the Kassa at every sale.
+   Persisted via the Store snapshot; keep only the last few hundred. */
+const RECEIPTS = [];

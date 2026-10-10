@@ -610,7 +610,7 @@
     aria-label="${esc(pr.name)} — show location">
   <td><span class="chev">${I.chev}</span></td>
   <td class="t-main__name">${esc(pr.name)}<br><span class="t-main__sku">${esc(pr.brand)}</span></td>
-  <td><span class="tag tag--sku">${pr.id}</span></td>
+  <td><span class="tag tag--sku">${pr.id}</span>${pr.barcode ? `<br><span class="t-barcode">${esc(pr.barcode)}</span>` : ''}</td>
   <td><span class="tag tag--cat" style="background:hsl(${c.hue} 85% 96%);color:hsl(${c.hue} 55% 32%)">${esc(c.name || '')}</span></td>
   <td style="color:var(--muted);max-width:280px">${esc(pr.desc)}</td>
   <td class="num">${n0(r.qty)}</td>
@@ -1894,6 +1894,114 @@ ${dots}`;
   }
 
   /* =====================================================================
+     USERS  (boss-only account management)
+     ===================================================================== */
+  function initUsers() {
+    const host = $('[data-users]');
+    if (!host) return;
+    if (!Auth.isBoss()) { location.replace('dashboard.html'); return; }
+
+    function render() {
+      const rows = Auth.listUsers();
+      $('[data-users-list]', host).innerHTML = `
+<div class="card card--flush">
+  <div class="tablewrap">
+    <table class="t">
+      <thead><tr>
+        <th>Foydalanuvchi</th>
+        <th>Ism</th>
+        <th>Daraja</th>
+        <th>Parol</th>
+        <th>Qo‘shilgan</th>
+        <th class="actions">Amallar</th>
+      </tr></thead>
+      <tbody>
+      ${rows.map(u => `
+        <tr>
+          <td><b>${esc(u.user)}</b></td>
+          <td>${esc(u.name)}</td>
+          <td><span class="pill ${u.role === 'Administrator' ? 'pill--ok' : u.role === 'Kassa' ? 'pill--info' : 'pill--grey'}">${esc(u.role)}</span></td>
+          <td style="color:var(--muted)">••••••</td>
+          <td style="color:var(--muted)">${u.added ? new Date(u.added).toLocaleDateString('en-GB') : '—'}</td>
+          <td class="actions">
+            <button class="icon-btn" type="button" data-upass="${esc(u.user)}" title="Parol o‘zgartirish" aria-label="Parol o‘zgartirish">${I.edit}</button>
+            <button class="icon-btn icon-btn--danger" type="button" data-udel="${esc(u.user)}" title="O‘chirish" aria-label="O‘chirish">${I.trash}</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+</div>`;
+    }
+
+    host.addEventListener('click', e => {
+      if (e.target.closest('[data-action="add-user"]')) {
+        UI.modal({
+          title: 'Yangi foydalanuvchi',
+          subtitle: 'Ishchi yoki yangi administrator hisobi',
+          fields: [
+            { key: 'user',  label: 'Login', required: true, placeholder: 'masalan: ishchi2' },
+            { key: 'name',  label: 'Ism', required: true, placeholder: 'Ishchi' },
+            { key: 'pass',  label: 'Parol', required: true, placeholder: 'kamida 4 ta belgi',
+              hint: 'Eslatma: parol koddan ko‘rinadi (demo darajadagi himoya)' },
+            { key: 'role',  label: 'Daraja', type: 'select', required: true,
+              options: [{ value: 'ishchi', label: 'Ishchi' }, { value: 'kassa', label: 'Kassa (faqat sotish)' }, { value: 'boss', label: 'Administrator' }] }
+          ],
+          values: { role: 'ishchi' },
+          submitLabel: 'Qo‘shish',
+          onSubmit(d) {
+            const res = Auth.addUser(d);
+            if (!res.ok) { UI.toast(res.msg, 'warn'); return false; }
+            render();
+            UI.toast(res.user + ' qo‘shildi', 'ok');
+          }
+        });
+        return;
+      }
+
+      const up = e.target.closest('[data-upass]');
+      if (up) {
+        UI.modal({
+          title: up.dataset.upass + ' — parol o‘zgartirish',
+          fields: [
+            { key: 'pass',  label: 'Yangi parol', required: true, placeholder: 'kamida 4 ta belgi' },
+            { key: 'pass2', label: 'Parolni takrorlang', required: true, placeholder: 'kamida 4 ta belgi' }
+          ],
+          submitLabel: 'O‘zgartirish',
+          onSubmit(d) {
+            if (d.pass !== d.pass2) { UI.toast('Parollar mos kelmadi', 'warn'); return false; }
+            const res = Auth.changePass(up.dataset.upass, d.pass);
+            if (!res.ok) { UI.toast(res.msg, 'warn'); return false; }
+            UI.toast('Parol o‘zgartirildi', 'ok');
+          }
+        });
+        return;
+      }
+
+      const ud = e.target.closest('[data-udel]');
+      if (ud) {
+        const u = Auth.listUsers().find(x => x.user === ud.dataset.udel);
+        if (!u) return;
+        UI.confirm({
+          title: u.user + ' o‘chirilsinmi?',
+          message: 'Foydalanuvchi tizimga endi kira olmaydi. Uning sotuv cheklari tarixda o‘zgarishsiz qoladi.',
+          detail: u.user + ' · ' + u.name + ' · ' + u.role,
+          confirmLabel: 'O‘chirish',
+          danger: true
+        }).then(ok => {
+          if (!ok) return;
+          const res = Auth.deleteUser(u.user);
+          if (!res.ok) { UI.toast(res.msg, 'warn'); return; }
+          render();
+          UI.toast(u.user + ' o‘chirildi', 'warn');
+        });
+      }
+    });
+
+    render();
+  }
+
+  /* =====================================================================
      LOW STOCK  (its own page, under Expiry & Dead Stock)
      ===================================================================== */
   function initLowStock() {
@@ -2110,6 +2218,8 @@ ${dots}`;
     const f = [
       { key: 'name',  label: 'Product name', required: true, placeholder: 'Wholemeal Bread 800g' },
       { key: 'brand', label: 'Brand',        required: true, placeholder: 'Mill Rise' },
+      { key: 'barcode', label: 'Shtrix kod', placeholder: '880… — bo‘sh qoldirilsa avtomatik',
+        hint: 'Unikal bo‘lishi kerak (min 4 belgi)' },
       { key: 'cat',   label: 'Category',     type: 'select', options: catOptions(), required: true },
       { key: 'sup',   label: 'Supplier',     type: 'select', options: supOptions() },
       { key: 'cost',  label: 'Cost price',   type: 'number', step: '0.01', min: 0, required: true },
@@ -2134,7 +2244,7 @@ ${dots}`;
   function productValues(p) {
     if (!p) return {};
     return {
-      name: p.name, brand: p.brand, cat: p.cat, desc: p.desc, sup: p.sup,
+      name: p.name, brand: p.brand, barcode: p.barcode || '', cat: p.cat, desc: p.desc, sup: p.sup,
       cost: p.cost, price: p.price, row: p.row, shelf: p.shelf, sd: p.sd,
       stock: p.stock, cap: p.cap, reorder: p.reorder, sold30: p.sold30
     };
@@ -2201,7 +2311,7 @@ ${dots}`;
       if (/номенклатура|товар|наименование|nomen|mahsulot|tovar|product/.test(a)) { head = i + 1; break; }
     }
     /* column positions: fall back to the 1C layout A / D / E / F */
-    const col = { name: 0, qty: 3, sale: 4, buy: 5, min: -1 };
+    const col = { name: 0, qty: 3, sale: 4, buy: 5, min: -1, barcode: -1 };
     if (head > 0) {
       const h = grid[head - 1].map(c => String(c).toLowerCase().trim());
       const find = (re, dflt) => { const i = h.findIndex(c => re.test(c)); return i < 0 ? dflt : i; };
@@ -2210,6 +2320,23 @@ ${dots}`;
       col.sale = find(/sotuv|sale|продаж|retail/, 4);
       col.buy  = find(/xarid|buy|закуп|purchase|cost/, 5);
       col.min  = find(/минимальн|minimum|^min$/, -1);
+      col.barcode = find(/shtrix|barcode|штрих|^code$|^kod$/, -1);
+      /* no barcode header? sniff a column of long digit strings */
+      if (col.barcode < 0) {
+        const skip = new Set([col.name, col.qty, col.sale, col.buy, col.min]);
+        const width = Math.max(...grid.slice(head, head + 30).map(r => (r || []).length));
+        for (let c = 0; c < width; c++) {
+          if (skip.has(c)) continue;
+          let checked = 0, digits = 0;
+          for (let i = head; i < Math.min(grid.length, head + 30); i++) {
+            const v = String((grid[i] || [])[c] ?? '').trim();
+            if (!v) continue;
+            checked++;
+            if (/^\d{8,32}$/.test(v)) digits++;
+          }
+          if (checked >= 5 && digits / checked >= 0.8) { col.barcode = c; break; }
+        }
+      }
     }
 
     const out = [];
@@ -2223,8 +2350,10 @@ ${dots}`;
       const sale = parsePriceCell(r[col.sale]);
       const buy = parsePriceCell(r[col.buy]);
       const min = col.min >= 0 ? (Math.trunc(Number(r[col.min])) || 0) : 0;
+      const barcode = col.barcode >= 0 ? String(r[col.barcode] ?? '').trim() : '';
       out.push({
         name,
+        barcode: /^\d{4,32}$/.test(barcode) ? barcode : '',
         stock,
         min: Math.max(0, min),
         price: sale !== null ? sale : (buy || 0),
@@ -2313,6 +2442,7 @@ ${dots}`;
             const n = Store.importProducts(items.map((x, i) => ({
               name: x.name,
               brand: guessBrand(x.name),
+              barcode: x.barcode || '',
               cat: 'electrical',
               sup: 'IM',
               row: 13,
@@ -2389,7 +2519,11 @@ ${dots}`;
         fields: productFields(true),
         values: productValues(p),
         onSubmit(d) {
-          Store.updateProduct(p.id, d);
+          const res = Store.updateProduct(p.id, d);
+          if (res && res.err === 'barcode') {
+            UI.toast('Bu shtrix kod band yoki noto‘g‘ri (min 4 belgi)', 'warn');
+            return false;
+          }
           UI.toast(p.name + ' updated', 'ok');
         }
       });
@@ -2706,6 +2840,28 @@ ${dots}`;
       });
       UI.downloadCsv('purchase-order.csv', rows);
     },
+    'refill-low'() {
+      const lows = STOCK.filter(r => r.qty <= r.min);
+      if (!lows.length) { UI.toast('Low/out mahsulot yo‘q', 'ok'); return; }
+      UI.modal({
+        title: 'Qoldiqni to‘ldirish',
+        subtitle: lows.length + ' ta low/out qator topildi',
+        intro: 'Barcha low/out qatorlarning qoldig‘i kiritilgan songa tenglanadi:<br>' +
+          lows.slice(0, 6).map(r => esc(r.product.name) + ': <b>' + n0(r.qty) + '</b>').join('<br>') +
+          (lows.length > 6 ? '<br>…' : ''),
+        fields: [
+          { key: 'qty', label: 'Qoldiq (dona)', type: 'number', min: 0, step: 1, required: true,
+            hint: 'Masalan: 500' }
+        ],
+        values: { qty: 200 },
+        submitLabel: 'To‘ldirish',
+        onSubmit(d) {
+          const n = Math.max(0, Math.trunc(Number(d.qty) || 0));
+          const done = Store.refillLowTo(n);
+          UI.toast(n0(done) + ' ta qator ' + n0(n) + ' ga to‘ldirildi', 'ok');
+        }
+      });
+    },
     'reset-demo'() {
       UI.confirm({
         title: 'Reset demo data?',
@@ -2735,6 +2891,7 @@ ${dots}`;
     initExpiry();
     initLowStock();
     initInventory();
+    initUsers();
 
     /* first paint: bring every counter and meter to life wherever they are */
     rollAll(document);

@@ -25,7 +25,8 @@ const Store = (function () {
       })),
       locations:  LOCATIONS.map(l => ({ ...l })),
       transfers:  TRANSFERS.map(t => ({ ...t, date: t.date.toISOString() })),
-      inventories: INVENTORIES.map(s => ({ ...s, date: s.date.toISOString() }))
+      inventories: INVENTORIES.map(s => ({ ...s, date: s.date.toISOString() })),
+      receipts:   RECEIPTS.map(r => ({ ...r, date: r.date.toISOString() }))
     };
   }
 
@@ -86,6 +87,13 @@ const Store = (function () {
     if (Array.isArray(s.inventories)) {
       INVENTORIES.splice(0, INVENTORIES.length, ...s.inventories.map(x => ({ ...x, date: new Date(x.date) })));
     }
+    if (Array.isArray(s.receipts)) {
+      RECEIPTS.splice(0, RECEIPTS.length, ...s.receipts.map(x => ({
+        ...x,
+        date: new Date(x.date),
+        lines: (x.lines || []).map(l => ({ ...l }))
+      })));
+    }
     relink();
     return true;
   }
@@ -95,6 +103,17 @@ const Store = (function () {
       derive it here — everything else filters on the id. */
   function relink() {
     const byIdLoc = Object.fromEntries(LOCATIONS.map(l => [l.id, l]));
+
+    /* barcodes shipped with data.js; anything restored from an older save
+       gets one derived from its id so the kassa can always scan it.
+       The very first import batch used a legacy '50…' scheme — migrate
+       those to the current '880…' scheme as well. */
+    const takenBc = new Set();
+    PRODUCTS.forEach(p => {
+      if (!p.barcode || /^50\d{11}$/.test(p.barcode)) p.barcode = autoBarcode(p.id);
+      if (takenBc.has(p.barcode)) p.barcode = autoBarcode(p.id) + '-' + p.id.replace(/\D/g, '');
+      takenBc.add(p.barcode);
+    });
 
     /* dates come back from JSON as strings — revive them */
     PRODUCTS.forEach(p => {
@@ -165,6 +184,19 @@ const Store = (function () {
   function emit() { save(); listeners.forEach(fn => { try { fn(); } catch (e) { console.error(e); } }); }
 
   /* ---------------- products ---------------- */
+  /* Barcode: free text, digits preferred. Must be unique; empty means
+     "auto-assign from the SKU id". Returns null when invalid/taken. */
+  function cleanBarcode(raw, selfId) {
+    const v = String(raw == null ? '' : raw).trim();
+    if (!v) return null;
+    if (v.length < 4 || v.length > 32) return null;
+    const clash = PRODUCTS.some(p => p.barcode === v && p.id !== selfId);
+    return clash ? null : v;
+  }
+  function autoBarcode(id) {
+    return '880' + String(id).replace(/\D/g, '').padStart(10, '0');
+  }
+
   function addProduct(d) {
     const id = d.id || nextProductId();
     const sd = Number(d.sd) || 0;
@@ -173,7 +205,7 @@ const Store = (function () {
     const loc = LOCATIONS.find(l => l.row === row) || LOCATIONS[0];
 
     const p = {
-      id, barcode: '50' + id.replace(/\D/g, '').padStart(11, '0'),
+      id, barcode: cleanBarcode(d.barcode, id) || autoBarcode(id),
       name: d.name, brand: d.brand, cat: d.cat, desc: d.desc || '',
       row: loc.row, shelf,
       stock: Number(d.stock) || 0,
@@ -211,6 +243,11 @@ const Store = (function () {
 
     if (d.name !== undefined) p.name = d.name;
     if (d.brand !== undefined) p.brand = d.brand;
+    if (d.barcode !== undefined) {
+      const bc = cleanBarcode(d.barcode, p.id);
+      if (d.barcode && String(d.barcode).trim() && !bc) return { err: 'barcode' };
+      if (bc) p.barcode = bc;
+    }
     if (d.cat !== undefined) p.cat = d.cat;
     if (d.desc !== undefined) p.desc = d.desc;
     if (d.cost !== undefined) p.cost = Number(d.cost) || 0;
@@ -284,7 +321,7 @@ const Store = (function () {
       const age = sd > 0 ? Math.round(sd * 0.4) : 7;
 
       const p = {
-        id, barcode: '50' + id.replace(/\D/g, '').padStart(11, '0'),
+        id, barcode: cleanBarcode(d.barcode, id) || autoBarcode(id),
         name, brand: d.brand || '', cat: d.cat, desc: d.desc || '',
         row: loc.row,
         shelf: Math.max(1, Math.min(5, Number(d.shelf) || ((added % 5) + 1))),
@@ -519,6 +556,82 @@ const Store = (function () {
     return true;
   }
 
+  /* ---------------- sales / receipts (kassa) ---------------- */
+  function nextReceiptId() {
+    let max = 0;
+    RECEIPTS.forEach(r => {
+      const n = parseInt(String(r.id).replace(/\D/g, ''), 10);
+      if (isFinite(n) && n > max) max = n;
+    });
+    return 'CHK-' + String(max + 1).padStart(4, '0');
+  }
+
+  /** Take a whole cart through the till. lines: [{ productId, qty }].
+      Returns the saved receipt, or null if any line is short of stock —
+      nothing is deducted unless the whole cart can be served. */
+  function recordSale(lines, cashier) {
+    if (!Array.isArray(lines) || !lines.length) return null;
+
+    /* find the stock record that backs each product and check availability */
+    const picked = [];
+    for (const l of lines) {
+      const p = productById(l.productId);
+      if (!p) return null;
+      const rec = STOCK.find(r => r.id === p.id && (locationById(r.locationId) || {}).row === p.row)
+                 || STOCK.find(r => r.id === p.id);
+      const qty = Math.max(0, Math.trunc(Number(l.qty) || 0));
+      if (!rec || qty <= 0 || rec.qty < qty) return null;   /* one bad line voids the whole sale */
+      picked.push({ p, rec, qty });
+    }
+
+    const items = picked.map(({ p, rec, qty }) => {
+      rec.qty -= qty;
+      const home = (locationById(rec.locationId) || {}).row === p.row;
+      if (home) p.stock = rec.qty;
+      p.sold30 = (p.sold30 || 0) + qty;                     /* feed the velocity page */
+      return { productId: p.id, name: p.name, qty, price: p.price, total: qty * p.price };
+    });
+
+    const receipt = {
+      id: nextReceiptId(),
+      date: new Date(),
+      user: cashier || '—',
+      lines: items,
+      total: items.reduce((a, i) => a + i.total, 0)
+    };
+    RECEIPTS.unshift(receipt);
+    if (RECEIPTS.length > 500) RECEIPTS.length = 500;      /* localStorage is finite */
+    relink();
+    emit();
+    return receipt;
+  }
+
+  function deleteReceipt(id) {
+    const i = RECEIPTS.findIndex(r => r.id === id);
+    if (i < 0) return false;
+    RECEIPTS.splice(i, 1);
+    emit();
+    return true;
+  }
+
+  /* ---------------- bulk helpers ---------------- */
+  /** Set every low/out record's qty to the given level (single save).
+      Returns how many records were refilled. */
+  function refillLowTo(qty) {
+    const target = Math.max(0, Math.trunc(Number(qty) || 0));
+    let done = 0;
+    STOCK.forEach(r => {
+      if (r.qty <= r.min) {
+        r.qty = target;
+        if (r.product && (locationById(r.locationId) || {}).row === r.product.row) r.product.stock = target;
+        done++;
+      }
+    });
+    relink();
+    emit();
+    return done;
+  }
+
   /* ---------------- consolidation (merge two spots of one product) ---------------- */
   /** Move every unit of a product from one location record into another and
       drop the emptied record — the low crate is merged into the fuller one,
@@ -659,7 +772,8 @@ const Store = (function () {
     addLocation, updateLocation, deleteLocation,
     addTransfer, deleteTransfer,
     mergeRecord, unmergeRecord,
-    saveInventory, deleteInventory,
-    applyInventoryCorrection, applyInventoryCorrections
+    refillLowTo,    saveInventory, deleteInventory,
+    applyInventoryCorrection, applyInventoryCorrections,
+    recordSale, deleteReceipt
   };
 })();
