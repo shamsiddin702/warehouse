@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Expiry &amp; Dead Stock &mdash; Stock Manager</title>
+<title>Foydalanuvchilar &mdash; Stock Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232563eb'/><text y='.86em' x='50' text-anchor='middle' font-size='58'>&#128230;</text></svg>">
@@ -51,7 +51,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
         Reports
       </a>
-      <a href="expiry.html" aria-current="page">
+      <a href="expiry.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
         Expiry &amp; Dead Stock
       </a>
@@ -63,43 +63,39 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v3H9z"/><path d="M9 5.5H6.5A1.5 1.5 0 0 0 5 7v12a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V7a1.5 1.5 0 0 0-1.5-1.5H15"/><path d="M9.5 13.5l2 2 4-4.5"/></svg>
         Inventarizatsiya
       </a>
-
-      <a href="users.html" data-boss-only>
+      <a href="users.html" aria-current="page" data-boss-only>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4.5-6.2"/></svg>
         Foydalanuvchilar
       </a>
     </nav>
 
     <div class="side-foot">
-      
-      Expired stock comes off the shelf.<br>Dead stock needs discounting.
-    
       <button type="button" class="linkbtn" data-action="reset-demo">Reset demo data</button>
-      <button type="button" class="linkbtn" data-auth-logout>Chiqish</button>
     </div>
   </aside>
 
   <div class="main">
-    <div class="content" data-expiry>
+    <div class="content" data-users>
 
       <div class="page-head">
         <div>
-          <h1>Expiry &amp; Dead Stock</h1>
-          <p>What has gone off, and what is just sitting there</p>
+          <h1>Foydalanuvchilar</h1>
+          <p>Hisob qo‘shish, parol o‘zgartirish va o‘chirish — faqat administrator uchun</p>
         </div>
         <div class="page-head__actions">
-          <button class="btn" type="button" data-action="export-waste">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M7.5 10.5l4.5 4.5 4.5-4.5"/><path d="M4 19.5h16"/></svg>
-            Export waste list
+          <button class="btn btn--blue" type="button" data-action="add-user">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Yangi foydalanuvchi
           </button>
         </div>
       </div>
 
-      <div class="grid grid--4" data-kpis></div>
+      <div data-users-list></div>
 
-      <div data-expired></div>
-      <div data-expiring></div>
-      <div data-dead></div>
+      <div class="foot">
+        <span>Parollar brauzerda saqlanadi va koddan ko‘rinadi — demo darajadagi himoya.</span>
+        <span>Foydalanuvchi o‘chirilsa, uning sotuv cheklari tarixda qoladi.</span>
+      </div>
 
     </div>
   </div>

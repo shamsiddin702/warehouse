@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kassa &mdash; Stock Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232563eb'/><text y='.86em' x='50' text-anchor='middle' font-size='58'>&#128230;</text></svg>">
+</head>
+<body>
+<div class="kas-shell">
+
+  <header class="kas-head">
+    <a class="kas-brand" href="dashboard.html">
+      <span class="brand__mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 4h8a1.8 1.8 0 0 1 1.8 1.8V6H6.2v-.2A1.8 1.8 0 0 1 8 4z"/>
+          <rect x="3.5" y="6" width="17" height="14.5" rx="2.2"/>
+          <path d="M9.5 11h5M9.5 14.5h5"/>
+        </svg>
+      </span>
+      <span>
+        <span class="brand__name">Kassa</span>
+        <span class="brand__sub">Sotish</span>
+      </span>
+    </a>
+    <span class="kas-head__meta">
+      <span class="kas-user" data-kass-user>—</span>
+      <span class="kas-clock" data-kass-clock></span>
+      <button class="btn btn--ghost" type="button" data-kas-logout>Chiqish</button>
+    </span>
+  </header>
+
+  <div class="kas-main">
+    <section class="kas-left">
+      <div class="kas-scan">
+        <label class="kas-scan__label" for="kascan">Shtrix kod / nom / SKU</label>        <div class="kas-scan__row">
+          <input class="input kas-scan__input" id="kascan" type="text" data-kas-scan
+                 autocomplete="off" placeholder="Skanerlang yoki yozing…">
+          <button class="btn btn--blue" type="button" data-kas-find>Topish</button>
+        </div>
+        <p class="kas-scan__hint">Enter — kod to‘liq mos kelsa, mahsulot darhol savatga tushadi</p>
+      </div>
+      <div data-kas-result></div>
+    </section>
+
+    <aside class="kas-right">
+      <h2>Savat</h2>
+      <div data-kassa-cart></div>
+      <div class="kas-total">JAMI&nbsp;&nbsp;<b data-kass-total>0</b></div>
+      <button class="btn btn--blue kas-sell" type="button" data-kass-sell disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+        SOTISH
+      </button>
+      <button class="btn btn--ghost" type="button" data-kass-new>Yangi sotuv</button>
+    </aside>
+  </div>
+
+  <section class="kas-bottom">
+    <div class="kas-receipt-head">
+      <h2>Chek</h2>
+    </div>
+    <div data-kass-receipt></div>
+
+    <h3 class="kas-hist-title">Sotuvlar tarixi</h3>
+    <div data-kass-history></div>
+  </section>
+
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/kassa.js"></script>
+</body>
+</html>

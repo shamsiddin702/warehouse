@@ -30,6 +30,9 @@ powershell -ExecutionPolicy Bypass -File serve.ps1 -Port 8777
 | `reports.html` | Animated donut + line charts, utilization, alerts. Four tabs |
 | `expiry.html` | Expired lines, expiring soon, and slow/dead stock |
 | `lowstock.html` | Everything at/below minimum, grouped into an order sheet by supplier |
+| `inventory.html` | Stock-take: system vs counted, Mos/Kamomad/Ortiqcha, corrections, history |
+| `kassa.html` | Point of sale — scan-first selling, cart, receipts (Kassa role only) |
+| `users.html` | User management — boss only |
 
 ## Filtering stock by date
 
@@ -132,6 +135,51 @@ its row:
 
 So "apples in two crates, one nearly empty" becomes: merge the low crate into
 the full one, then drop a different product into the freed shelf.
+
+## Login & roles
+
+Every page (except the `index.html` redirect) sits behind a login screen.
+Accounts live in the browser (`stock-manager-users-v1`); the two master
+accounts are seeded from `USERS_SEED` in `assets/js/auth.js`:
+
+| Login | Parol | Daraja |
+| --- | --- | --- |
+| `boss` | `boss2026` | Administrator — everything, incl. user management |
+| `ishchi` | `ishchi2026` | Ishchi — everything except user management |
+| `kassa` | `kassa2026` | Kassa — lands straight on the selling screen, nothing else |
+
+The boss adds more accounts on the **Foydalanuvchilar** page (hidden from
+everyone else): login, name, password and role (Ishchi / Kassa / Administrator).
+Kassa-role users are bounced back to `kassa.html` from any other page, and the
+sidebar has no Kassa entry at all. After logging in, Kassa accounts land on
+the selling screen; Boss/Ishchi accounts land on the dashboard if they logged
+in from the Kassa page.
+
+## Barcodes & the Kassa
+
+Every product carries a **barcode** (`880` + zero-padded id, e.g.
+`8800000000001`), shown under the SKU in Products and editable in the
+Add/Edit modal (leave empty for auto-assign; duplicates are rejected).
+Older saves are migrated automatically. If the Excel file has a barcode
+column (header like "Shtrix", "Barcode", "Штрих-код") — or any column full of
+long digit strings — those codes are used instead of the generated ones, so
+real package barcodes scan straight through.
+
+The **Kassa** shows no product list — only a scan box:
+
+- Scan or type the **barcode** (or SKU) and press Enter: an exact match drops
+  straight into the cart and the box clears for the next scan.
+- Type a **name** and press Enter: up to 8 matches appear (name, barcode,
+  price, stock) — click a row or its Savatga button to add it. The full
+  catalogue is never listed.
+- Anything else shows "Topilmadi" — products are never listed on screen.
+- A product with no stock left still shows its card (name, barcode, price,
+  "qolmagan") so the cashier sees what was scanned — but it can't be added
+  until stock arrives.
+- Cart rows show **name + barcode**, quantity steppers, price and line total.
+- **SOTISH** deducts stock and shows the receipt below — no printing step.
+- **Sotuvlar tarixi** lists every sale below the receipt (persists in
+  `localStorage`; the boss can delete a receipt there).
 
 ## Inventarizatsiya (stock-take)
 
